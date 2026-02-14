@@ -36,3 +36,4 @@ backend/db/*.db-journal
 backend/uploads/*
 !backend/uploads/.gitkeep
 backend/data/*.json
+.vercel
