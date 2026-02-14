@@ -1,0 +1,117 @@
+/* Frappe Gantt 自訂樣式 */
+.gantt-container {
+  overflow: auto;
+  position: relative;
+}
+
+.gantt .grid-background {
+  fill: #ffffff;
+}
+
+.gantt .grid-header {
+  fill: #f8fafc;
+  stroke: #cbd5e1;
+  stroke-width: 1;
+}
+
+.gantt .grid-row {
+  fill: #ffffff;
+}
+
+.gantt .grid-row:nth-child(even) {
+  fill: #f8fafc;
+}
+
+.gantt .row-line {
+  stroke: #e2e8f0;
+}
+
+.gantt .tick {
+  stroke: #cbd5e1;
+  stroke-width: 0.2;
+}
+
+.gantt .today-highlight {
+  fill: #dbeafe;
+  opacity: 0.5;
+}
+
+.gantt .arrow {
+  fill: none;
+  stroke: #64748b;
+  stroke-width: 1.4;
+}
+
+.gantt .bar {
+  fill: #60a5fa;
+  stroke: #3b82f6;
+  stroke-width: 0;
+  transition: all 0.2s ease;
+}
+
+.gantt .bar:hover {
+  opacity: 0.8;
+}
+
+.gantt .bar-progress {
+  fill: rgba(255,255,255,0.3);
+}
+
+.gantt .bar-label {
+  fill: #1e293b;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.gantt .bar-wrapper:hover .bar {
+  fill: #3b82f6;
+}
+
+.gantt .bar-wrapper:hover .bar-label {
+  fill: #0f172a;
+}
+
+.gantt .handle {
+  fill: #cbd5e1;
+  cursor: ew-resize;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.gantt .bar-wrapper:hover .handle {
+  opacity: 1;
+}
+
+.gantt .lower-text, .gantt .upper-text {
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.gantt .lower-text {
+  fill: #64748b;
+}
+
+.gantt .upper-text {
+  fill: #1e293b;
+}
+
+/* 自訂任務顏色 */
+.gantt .bar-normal {
+  fill: #60a5fa;
+  stroke: #3b82f6;
+}
+
+.gantt .bar-warning {
+  fill: #fbbf24;
+  stroke: #f59e0b;
+}
+
+.gantt .bar-danger {
+  fill: #ef4444;
+  stroke: #dc2626;
+}
+
+.gantt .bar-complete {
+  fill: #10b981;
+  stroke: #059669;
+}

@@ -1,0 +1,36 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# 環境變數
+.env
+.env.local
+
+# Google 憑證（敏感資料）
+google-credentials.json
+token.json
+
+# 資料庫
+*.db
+*.db-shm
+*.db-wal
+
+# 上傳的檔案
+uploads/
+!uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log

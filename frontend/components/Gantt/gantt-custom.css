@@ -1,0 +1,111 @@
+/* Frappe Gantt 客製化樣式 */
+
+.gantt-container {
+  min-width: 100%;
+  overflow: visible;
+}
+
+/* 任務列樣式 */
+.gantt .bar-wrapper {
+  cursor: pointer;
+}
+
+.gantt .bar-wrapper:hover .bar {
+  opacity: 0.8;
+}
+
+/* 狀態顏色 */
+.gantt .bar.status-on-time {
+  fill: #10b981;
+}
+
+.gantt .bar.status-warning {
+  fill: #f59e0b;
+}
+
+.gantt .bar.status-late {
+  fill: #ef4444;
+}
+
+/* 進度條樣式 */
+.gantt .bar-progress {
+  fill: rgba(0, 0, 0, 0.3);
+}
+
+/* 任務標籤 */
+.gantt .bar-label {
+  fill: white;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* Popup 樣式 */
+.gantt-popup {
+  padding: 12px;
+  min-width: 200px;
+}
+
+.gantt-popup h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1f2937;
+}
+
+.gantt-popup p {
+  font-size: 14px;
+  margin: 4px 0;
+  color: #4b5563;
+}
+
+.gantt-popup .status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.gantt-popup .status-badge.status-on-time {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.gantt-popup .status-badge.status-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.gantt-popup .status-badge.status-late {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* 依賴箭頭 */
+.gantt .arrow {
+  stroke: #9ca3af;
+  stroke-width: 1.5;
+}
+
+/* 今日線 */
+.gantt .today-highlight {
+  fill: rgba(239, 68, 68, 0.1);
+  stroke: #ef4444;
+  stroke-width: 1;
+}
+
+/* 手機端優化 */
+@media (max-width: 768px) {
+  .gantt-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .gantt .bar-label {
+    font-size: 10px;
+  }
+  
+  .gantt-popup {
+    font-size: 12px;
+  }
+}
