@@ -1,0 +1,84 @@
+/**
+ * Frappe Gantt 客製化樣式
+ * 雙軌進度：預計（灰色底線）+ 實際（彩色進度條）
+ */
+
+/* 甘特圖容器 */
+.gantt {
+  font-family: 'Inter', sans-serif;
+}
+
+/* 任務條顏色 */
+.gantt .bar-normal { 
+  fill: #60a5fa; /* 藍色 - 正常進度 */
+}
+
+.gantt .bar-warning { 
+  fill: #fbbf24; /* 黃色 - 輕微延遲 */
+}
+
+.gantt .bar-danger { 
+  fill: #ef4444; /* 紅色 - 嚴重延遲 */
+}
+
+.gantt .bar-complete { 
+  fill: #10b981; /* 綠色 - 已完成 */
+}
+
+/* 進度條 */
+.gantt .bar-progress { 
+  fill: rgba(255, 255, 255, 0.3); 
+}
+
+/* 任務標籤 */
+.gantt .bar-label {
+  fill: #ffffff;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* 網格線 */
+.gantt .grid-row {
+  fill: #ffffff;
+}
+
+.gantt .grid-row:nth-child(even) {
+  fill: #f9fafb;
+}
+
+/* 時間軸 */
+.gantt .lower-text, 
+.gantt .upper-text {
+  fill: #374151;
+  font-size: 11px;
+}
+
+/* 依賴線 */
+.gantt .arrow {
+  stroke: #9ca3af;
+  stroke-width: 1.5;
+}
+
+/* Hover 效果 */
+.gantt .bar-wrapper:hover .bar {
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+/* 今天標記 */
+.gantt .today-highlight {
+  fill: #3b82f6;
+  opacity: 0.1;
+}
+
+/* RWD：手機版調整 */
+@media (max-width: 768px) {
+  .gantt .bar-label {
+    font-size: 10px;
+  }
+  
+  .gantt .lower-text, 
+  .gantt .upper-text {
+    font-size: 9px;
+  }
+}

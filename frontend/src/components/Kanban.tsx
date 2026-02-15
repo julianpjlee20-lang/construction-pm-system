@@ -61,15 +61,17 @@ const Kanban: React.FC = () => {
   };
   
   return (
-    <div className="h-full p-6 bg-gray-50">
-      <h1 className="text-2xl font-bold mb-6">工程任務看板</h1>
+    <div className="h-full p-3 md:p-6 bg-gray-50">
+      {/* 標題 - 手機版縮小 */}
+      <h1 className="text-lg md:text-2xl font-bold mb-4 md:mb-6">工程任務看板</h1>
       
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
+        {/* 手機版：單欄垂直排列；桌面版：三欄並排 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 h-full">
           {columns.map((status) => (
             <KanbanColumn
               key={status}
@@ -107,19 +109,21 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, tasks, onTaskClick 
   
   return (
     <div
-      className={`rounded-lg border-2 p-4 ${statusColors[status]} min-h-[500px]`}
+      className={`rounded-lg border-2 p-3 md:p-4 ${statusColors[status]} min-h-[300px] md:min-h-[500px]`}
       id={status}
     >
-      <h2 className="text-lg font-semibold mb-4 flex items-center justify-between">
+      {/* 欄位標題 - 手機版縮小 */}
+      <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center justify-between">
         <span>{TASK_STATUS_LABELS[status]}</span>
-        <span className="text-sm font-normal text-gray-500">({tasks.length})</span>
+        <span className="text-xs md:text-sm font-normal text-gray-500">({tasks.length})</span>
       </h2>
       
       <SortableContext
         items={tasks.map(t => t.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-3">
+        {/* 手機版：間距縮小 */}
+        <div className="space-y-2 md:space-y-3">
           {tasks.map((task) => (
             <div key={task.id} onClick={() => onTaskClick(task.id)}>
               <TaskCard task={task} />

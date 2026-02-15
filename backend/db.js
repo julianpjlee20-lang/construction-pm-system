@@ -39,14 +39,30 @@ const initDB = () => {
     CREATE TABLE IF NOT EXISTS photos (
       id TEXT PRIMARY KEY,
       task_id TEXT NOT NULL,
-      gdrive_url TEXT NOT NULL,
+      gdrive_url TEXT,
       gdrive_file_id TEXT,
+      local_path TEXT,
+      needs_sync INTEGER DEFAULT 0,
       description TEXT,
       uploaded_by TEXT,
+      timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
       uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
     )
   `);
+
+  // 遷移：為現有資料庫加入新欄位（如果不存在）
+  try {
+    db.exec(`ALTER TABLE photos ADD COLUMN local_path TEXT`);
+  } catch (e) { /* 欄位已存在 */ }
+  
+  try {
+    db.exec(`ALTER TABLE photos ADD COLUMN needs_sync INTEGER DEFAULT 0`);
+  } catch (e) { /* 欄位已存在 */ }
+  
+  try {
+    db.exec(`ALTER TABLE photos ADD COLUMN timestamp TEXT DEFAULT CURRENT_TIMESTAMP`);
+  } catch (e) { /* 欄位已存在 */ }
 
   console.log('✅ Database initialized');
 };
@@ -176,21 +192,51 @@ const createPhoto = (photoData) => {
   const {
     id,
     task_id,
-    gdrive_url,
+    gdrive_url = null,
     gdrive_file_id = null,
+    local_path = null,
+    needs_sync = 0,
     description = null,
-    uploaded_by = null
+    uploaded_by = null,
+    timestamp = null
   } = photoData;
 
   const stmt = db.prepare(`
-    INSERT INTO photos (id, task_id, gdrive_url, gdrive_file_id, description, uploaded_by)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO photos (
+      id, task_id, gdrive_url, gdrive_file_id, local_path, needs_sync, 
+      description, uploaded_by, timestamp
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  stmt.run(id, task_id, gdrive_url, gdrive_file_id, description, uploaded_by);
+  stmt.run(
+    id, task_id, gdrive_url, gdrive_file_id, local_path, needs_sync,
+    description, uploaded_by, timestamp || new Date().toISOString()
+  );
 
   const getStmt = db.prepare('SELECT * FROM photos WHERE id = ?');
   return getStmt.get(id);
+};
+
+const updatePhoto = (id, updates) => {
+  const allowedFields = ['description', 'needs_sync'];
+  const setClause = [];
+  const values = [];
+
+  Object.keys(updates).forEach(key => {
+    if (allowedFields.includes(key)) {
+      setClause.push(`${key} = ?`);
+      values.push(updates[key]);
+    }
+  });
+
+  if (setClause.length === 0) return false;
+
+  values.push(id);
+  const stmt = db.prepare(`UPDATE photos SET ${setClause.join(', ')} WHERE id = ?`);
+  const result = stmt.run(...values);
+  
+  return result.changes > 0;
 };
 
 const deletePhoto = (id) => {
@@ -211,5 +257,6 @@ module.exports = {
   deleteTask,
   getPhotosByTaskId,
   createPhoto,
+  updatePhoto,
   deletePhoto
 };

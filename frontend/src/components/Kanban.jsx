@@ -72,8 +72,8 @@ const Kanban = ({ onTaskClick }) => {
   const activeTask = tasks.find((task) => task.id === activeId);
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">任務看板</h2>
+    <div className="p-4 md:p-6">
+      <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">任務看板</h2>
       
       <DndContext
         sensors={sensors}
@@ -81,7 +81,8 @@ const Kanban = ({ onTaskClick }) => {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-3 gap-6">
+        {/* RWD: 手機版垂直排列，桌面版三欄 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {COLUMNS.map((column) => {
             const columnTasks = getTasksByStatus(column.id);
             

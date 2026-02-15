@@ -13,6 +13,7 @@ interface TaskStore {
   updateTaskStatus: (id: string, status: TaskStatus) => void;
   updateTaskProgress: (id: string, progress: number) => void;
   addPhoto: (taskId: string, photo: Photo) => void;
+  updatePhotoDescription: (taskId: string, photoId: string, description: string) => void;
   selectTask: (id: string | null) => void;
   
   // Getters
@@ -134,6 +135,21 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     tasks: state.tasks.map(task =>
       task.id === taskId
         ? { ...task, photos: [...task.photos, photo] }
+        : task
+    )
+  })),
+  
+  updatePhotoDescription: (taskId, photoId, description) => set((state) => ({
+    tasks: state.tasks.map(task =>
+      task.id === taskId
+        ? {
+            ...task,
+            photos: task.photos.map(photo =>
+              photo.id === photoId
+                ? { ...photo, description }
+                : photo
+            )
+          }
         : task
     )
   })),

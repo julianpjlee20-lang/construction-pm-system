@@ -1,0 +1,186 @@
+// Tasks API - Supabase 版本
+import express from 'express';
+import { supabase } from '../services/supabase.js';
+
+const router = express.Router();
+
+// GET /api/tasks - 取得所有任務
+router.get('/', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select(`
+        *,
+        photos (*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/tasks/:id - 取得單一任務
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .select(`
+        *,
+        photos (*)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+      throw error;
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching task:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/tasks - 新增任務
+router.post('/', async (req, res) => {
+  try {
+    const taskData = {
+      ...req.body,
+      progress: req.body.progress || 0,
+      dependencies: req.body.dependencies || []
+    };
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert([taskData])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('Error creating task:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/tasks/:id - 更新任務
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+      throw error;
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error updating task:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PATCH /api/tasks/:id/status - 更新任務狀態（Kanban 拖拉用）
+router.patch('/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+
+    // 自動更新實際開始時間
+    const updates = { status };
+    if (status === '進行中' && !req.body.actual_start_date) {
+      updates.actual_start_date = new Date().toISOString().split('T')[0];
+    } else if (status === '已完成') {
+      updates.actual_end_date = new Date().toISOString().split('T')[0];
+      updates.progress = 100;
+    }
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PATCH /api/tasks/:id/progress - 更新進度
+router.patch('/:id/progress', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { progress } = req.body;
+
+    if (progress === undefined || progress < 0 || progress > 100) {
+      return res.status(400).json({ error: 'Progress must be between 0 and 100' });
+    }
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({ progress })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error updating task progress:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/tasks/:id - 刪除任務
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    res.json({ message: 'Task deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+export default router;

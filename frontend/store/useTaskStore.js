@@ -1,112 +1,65 @@
 import { create } from 'zustand';
+import { createClient } from '@supabase/supabase-js';
 
-// LocalStorage 鍵名
-const STORAGE_KEY = 'construction-pm-tasks';
-
-// 從 localStorage 讀取資料
-const loadFromStorage = () => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : getInitialTasks();
-  } catch (error) {
-    console.error('Failed to load from localStorage:', error);
-    return getInitialTasks();
-  }
-};
-
-// 儲存到 localStorage
-const saveToStorage = (tasks) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  } catch (error) {
-    console.error('Failed to save to localStorage:', error);
-  }
-};
-
-// 初始任務資料
-const getInitialTasks = () => [
-  {
-    id: "1",
-    name: "基礎開挖",
-    description: "南港辦公室基礎工程",
-    status: "進行中",
-    assignee: "張師傅",
-    plannedStartDate: "2026-02-10",
-    plannedEndDate: "2026-02-20",
-    plannedDuration: 10,
-    actualStartDate: "2026-02-10",
-    actualEndDate: null,
-    progress: 60,
-    dependencies: [],
-    photos: []
-  },
-  {
-    id: "2",
-    name: "鋼筋綁紮",
-    description: "鋼筋工程",
-    status: "待辦",
-    assignee: "李師傅",
-    plannedStartDate: "2026-02-21",
-    plannedEndDate: "2026-02-28",
-    plannedDuration: 7,
-    actualStartDate: null,
-    actualEndDate: null,
-    progress: 0,
-    dependencies: ["1"],
-    photos: []
-  },
-  {
-    id: "3",
-    name: "混凝土澆置",
-    description: "基礎混凝土工程",
-    status: "待辦",
-    assignee: "王師傅",
-    plannedStartDate: "2026-03-01",
-    plannedEndDate: "2026-03-05",
-    plannedDuration: 4,
-    actualStartDate: null,
-    actualEndDate: null,
-    progress: 0,
-    dependencies: ["2"],
-    photos: []
-  }
-];
+// Supabase 客戶端
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || 'https://igwafmmxfkaorzfimyum.supabase.co',
+  import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlnd2FmbW14Zmthb3J6ZmlteXVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMTg2MzIsImV4cCI6MjA4NjY5NDYzMn0.p0R2kO5I9kEL7QBS-rQwgMeG_w-2IqlqcbJnB0vgoW4'
+);
 
 const useTaskStore = create((set, get) => ({
-  tasks: loadFromStorage(),
+  tasks: [],
   loading: false,
   error: null,
   selectedTask: null,
 
-  // 取得所有任務（從 localStorage）
+  // 取得所有任務
   fetchTasks: async () => {
     set({ loading: true, error: null });
     try {
-      // 模擬 API 延遲
-      await new Promise(resolve => setTimeout(resolve, 300));
-      const tasks = loadFromStorage();
-      set({ tasks, loading: false });
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('id');
+
+      if (error) throw error;
+
+      // 補充預設值
+      const tasksWithDefaults = (data || []).map(task => ({
+        ...task,
+        description: task.description || '',
+        assignee: task.assignee || '',
+        progress: task.progress || 0,
+        status: task.status || '待辦',
+        dependencies: task.dependencies || [],
+        photos: []
+      }));
+
+      set({ tasks: tasksWithDefaults, loading: false });
     } catch (error) {
       set({ error: error.message, loading: false });
+      console.error('Failed to fetch tasks:', error);
     }
   },
 
   // 新增任務
   addTask: async (taskData) => {
     try {
-      const newTask = {
-        id: Date.now().toString(),
-        ...taskData,
-        photos: [],
-        actualStartDate: null,
-        actualEndDate: null,
-        progress: 0
-      };
-      
-      const updatedTasks = [...get().tasks, newTask];
-      saveToStorage(updatedTasks);
-      set({ tasks: updatedTasks });
-      return newTask;
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([{
+          name: taskData.name,
+          status: taskData.status || '待辦',
+          progress: taskData.progress || 0,
+          project_id: taskData.project_id
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      set((state) => ({ tasks: [...state.tasks, data] }));
+      return data;
     } catch (error) {
       set({ error: error.message });
       throw error;
@@ -116,26 +69,34 @@ const useTaskStore = create((set, get) => ({
   // 更新任務
   updateTask: async (taskId, updates) => {
     try {
-      const updatedTasks = get().tasks.map((task) =>
-        task.id === taskId ? { ...task, ...updates } : task
-      );
+      const { data, error } = await supabase
+        .from('tasks')
+        .update(updates)
+        .eq('id', taskId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      set((state) => ({
+        tasks: state.tasks.map((task) =>
+          task.id === taskId ? data : task
+        ),
+      }));
       
-      saveToStorage(updatedTasks);
-      set({ tasks: updatedTasks });
-      
-      return updatedTasks.find(t => t.id === taskId);
+      return data;
     } catch (error) {
       set({ error: error.message });
       throw error;
     }
   },
 
-  // 更新任務狀態（用於 Kanban 拖拉）
+  // 更新任務狀態
   updateTaskStatus: async (taskId, newStatus) => {
     return get().updateTask(taskId, { status: newStatus });
   },
 
-  // 上傳照片（儲存 base64）
+  // 上傳照片（暫時用 base64，之後可升級到 Supabase Storage）
   uploadPhoto: async (taskId, photoFile) => {
     try {
       // 轉換為 base64
@@ -146,22 +107,14 @@ const useTaskStore = create((set, get) => ({
       });
 
       const photoData = {
-        id: Date.now().toString(),
         url: base64,
         description: photoFile.name,
-        timestamp: new Date().toISOString(),
-        uploadedBy: '施工人員'
+        uploaded_by: '施工人員'
       };
 
-      const updatedTasks = get().tasks.map((task) =>
-        task.id === taskId
-          ? { ...task, photos: [...(task.photos || []), photoData] }
-          : task
-      );
+      // TODO: 上傳到 Supabase Storage
+      // 暫時儲存在 task 的 photos array（需要資料庫 schema 調整）
 
-      saveToStorage(updatedTasks);
-      set({ tasks: updatedTasks });
-      
       return photoData;
     } catch (error) {
       set({ error: error.message });
@@ -169,18 +122,11 @@ const useTaskStore = create((set, get) => ({
     }
   },
 
-  // 設定選中的任務（用於 Modal）
+  // 設定選中的任務
   setSelectedTask: (task) => set({ selectedTask: task }),
 
   // 清除錯誤
   clearError: () => set({ error: null }),
-
-  // 重置資料
-  resetData: () => {
-    const initialTasks = getInitialTasks();
-    saveToStorage(initialTasks);
-    set({ tasks: initialTasks });
-  }
 }));
 
 export default useTaskStore;

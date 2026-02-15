@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Kanban from './src/components/Kanban';
 import GanttChart from './src/components/GanttChart';
 import PhotoUpload from './src/components/PhotoUpload';
@@ -8,13 +8,30 @@ import useTaskStore from './src/store/useTaskStore';
 function App() {
   const [currentView, setCurrentView] = useState('kanban'); // 'kanban', 'gantt', 'photos'
   const [selectedTaskForPhotos, setSelectedTaskForPhotos] = useState(null);
-  const { selectedTask, setSelectedTask } = useTaskStore();
+  const { selectedTask, setSelectedTask, fetchTasks, loading } = useTaskStore();
+
+  // 初始化：載入任務資料
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   const views = [
     { id: 'kanban', name: '看板', icon: '📋' },
     { id: 'gantt', name: '甘特圖', icon: '📊' },
     { id: 'photos', name: '照片', icon: '📷' },
   ];
+
+  // 載入中畫面
+  if (loading && useTaskStore.getState().tasks.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">載入中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
