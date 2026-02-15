@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Kanban from './src/components/Kanban';
-import GanttChart from './src/components/GanttChart';
-import PhotoUpload from './src/components/PhotoUpload';
-import TaskDetail from './src/components/TaskDetail';
+import Kanban, { TaskDetail } from './src/components/Kanban';
+import GanttChart from './src/components/Gantt';
+import { PhotoUpload } from './src/components/Photos';
 import useTaskStore from './src/store/useTaskStore';
 
 function App() {

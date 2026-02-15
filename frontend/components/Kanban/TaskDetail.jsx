@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useTaskStore } from '../../store/taskStore';
+import useTaskStore from '../../store/useTaskStore';
 import PhotoUpload from '../Photos/PhotoUpload';
 import PhotoTimeline from '../Photos/PhotoTimeline';
 
-export default function TaskDetail({ taskId, onClose }) {
-  const { tasks, updateTaskProgress } = useTaskStore();
-  const task = tasks.find(t => t.id === taskId);
+export default function TaskDetail({ task: propTask, taskId, onClose, onSave }) {
+  const { tasks, updateTask } = useTaskStore();
+  // 支援兩種傳入方式：直接傳 task 物件，或傳 taskId
+  const task = propTask || tasks.find(t => t.id === taskId);
   const [progress, setProgress] = useState(task?.progress || 0);
 
   if (!task) {
@@ -26,8 +27,12 @@ export default function TaskDetail({ taskId, onClose }) {
     setProgress(newProgress);
   };
 
-  const handleSaveProgress = () => {
-    updateTaskProgress(taskId, progress);
+  const handleSaveProgress = async () => {
+    const taskIdToUpdate = task.id;
+    await updateTask(taskIdToUpdate, { progress });
+    if (onSave) {
+      onSave(taskIdToUpdate, { progress });
+    }
   };
 
   return (

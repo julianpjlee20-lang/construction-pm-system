@@ -4,8 +4,8 @@ import useTaskStore from '../../store/useTaskStore';
 import { differenceInDays, parseISO } from 'date-fns';
 import './gantt-custom.css';
 
-const GanttChart = () => {
-  const { tasks, fetchTasks, setSelectedTask } = useTaskStore();
+const GanttChart = ({ onTaskClick }) => {
+  const { tasks, fetchTasks } = useTaskStore();
   const ganttRef = useRef(null);
   const ganttInstanceRef = useRef(null);
 
@@ -51,8 +51,8 @@ const GanttChart = () => {
         popup_trigger: 'click',
         on_click: (task) => {
           // 點擊任務開啟詳情 Modal
-          if (task._task) {
-            setSelectedTask(task._task);
+          if (task._task && onTaskClick) {
+            onTaskClick(task._task.id);
           }
         },
         on_view_change: (mode) => {
@@ -87,7 +87,7 @@ const GanttChart = () => {
         ganttRef.current.innerHTML = '';
       }
     };
-  }, [tasks, setSelectedTask]);
+  }, [tasks, onTaskClick]);
 
   // 計算任務狀態（落後警示）
   const calculateTaskStatus = (task) => {

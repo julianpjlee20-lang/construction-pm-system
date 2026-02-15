@@ -20,7 +20,7 @@ const COLUMNS = [
   { id: '已完成', title: '已完成', status: '已完成' },
 ];
 
-const KanbanBoard = () => {
+const KanbanBoard = ({ onTaskClick }) => {
   const { tasks, fetchTasks, updateTaskStatus } = useTaskStore();
   const [activeId, setActiveId] = React.useState(null);
 
@@ -91,6 +91,7 @@ const KanbanBoard = () => {
               id={column.id}
               title={column.title}
               tasks={getTasksByStatus(column.status)}
+              onTaskClick={onTaskClick}
             />
           ))}
         </div>

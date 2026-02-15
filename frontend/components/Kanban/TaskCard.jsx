@@ -3,9 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import useTaskStore from '../../store/useTaskStore';
 
-const TaskCard = ({ task, isDragging = false }) => {
-  const { setSelectedTask } = useTaskStore();
-  
+const TaskCard = ({ task, isDragging = false, onClick }) => {
   const {
     attributes,
     listeners,
@@ -29,17 +27,41 @@ const TaskCard = ({ task, isDragging = false }) => {
     return 'bg-red-500';
   };
 
+  const handleClick = (e) => {
+    // 如果正在拖曳，不觸發點擊
+    if (isDragging || isSortableDragging) return;
+    
+    // 阻止拖曳事件傳播
+    e.stopPropagation();
+    
+    if (onClick) {
+      onClick();
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      onClick={() => !isDragging && setSelectedTask(task)}
-      className={`bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
+      className={`bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow ${
         isDragging ? 'shadow-xl ring-2 ring-blue-400' : ''
       }`}
     >
+      {/* 拖曳手柄區域 */}
+      <div 
+        {...listeners}
+        className="cursor-move mb-2 -mt-2 -mx-2 px-2 py-2 hover:bg-gray-50 rounded-t-lg"
+      >
+        <div className="flex items-center justify-center text-gray-400">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+          </svg>
+        </div>
+      </div>
+      
+      {/* 可點擊的內容區域 */}
+      <div onClick={handleClick} className="cursor-pointer">
       <h3 className="font-medium text-gray-800 mb-2 line-clamp-2">
         {task.name}
       </h3>
@@ -92,6 +114,7 @@ const TaskCard = ({ task, isDragging = false }) => {
           <span>{task.photos.length} 張照片</span>
         </div>
       )}
+      </div>
     </div>
   );
 };
