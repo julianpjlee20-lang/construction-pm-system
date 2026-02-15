@@ -24,13 +24,19 @@ const useTaskStore = create((set, get) => ({
 
       if (error) throw error;
 
-      // 補充預設值
+      // 補充預設值（適應最小 schema）
       const tasksWithDefaults = (data || []).map(task => ({
-        ...task,
+        id: task.id,
+        project_id: task.project_id,
+        name: task.name || '',
         description: task.description || '',
         assignee: task.assignee || '',
-        progress: task.progress || 0,
         status: task.status || '待辦',
+        progress: task.progress || 0,
+        planned_start_date: task.planned_start_date || null,
+        planned_end_date: task.planned_end_date || null,
+        actual_start_date: task.actual_start_date || null,
+        actual_end_date: task.actual_end_date || null,
         dependencies: task.dependencies || [],
         photos: []
       }));
@@ -45,21 +51,33 @@ const useTaskStore = create((set, get) => ({
   // 新增任務
   addTask: async (taskData) => {
     try {
+      // 只插入存在的欄位
+      const cleanData = {
+        name: taskData.name,
+        status: taskData.status || '待辦',
+        progress: taskData.progress || 0,
+        project_id: taskData.project_id
+      };
+
       const { data, error } = await supabase
         .from('tasks')
-        .insert([{
-          name: taskData.name,
-          status: taskData.status || '待辦',
-          progress: taskData.progress || 0,
-          project_id: taskData.project_id
-        }])
+        .insert([cleanData])
         .select()
         .single();
 
       if (error) throw error;
 
-      set((state) => ({ tasks: [...state.tasks, data] }));
-      return data;
+      // 補充預設值
+      const fullData = {
+        ...data,
+        description: '',
+        assignee: '',
+        dependencies: [],
+        photos: []
+      };
+
+      set((state) => ({ tasks: [...state.tasks, fullData] }));
+      return fullData;
     } catch (error) {
       set({ error: error.message });
       throw error;
@@ -69,9 +87,15 @@ const useTaskStore = create((set, get) => ({
   // 更新任務
   updateTask: async (taskId, updates) => {
     try {
+      // 只更新存在的欄位
+      const cleanUpdates = {};
+      if (updates.name !== undefined) cleanUpdates.name = updates.name;
+      if (updates.status !== undefined) cleanUpdates.status = updates.status;
+      if (updates.progress !== undefined) cleanUpdates.progress = updates.progress;
+
       const { data, error } = await supabase
         .from('tasks')
-        .update(updates)
+        .update(cleanUpdates)
         .eq('id', taskId)
         .select()
         .single();
@@ -80,7 +104,7 @@ const useTaskStore = create((set, get) => ({
 
       set((state) => ({
         tasks: state.tasks.map((task) =>
-          task.id === taskId ? data : task
+          task.id === taskId ? { ...task, ...data } : task
         ),
       }));
       
@@ -96,7 +120,7 @@ const useTaskStore = create((set, get) => ({
     return get().updateTask(taskId, { status: newStatus });
   },
 
-  // 上傳照片（暫時用 base64，之後可升級到 Supabase Storage）
+  // 上傳照片（暫時儲存在本地）
   uploadPhoto: async (taskId, photoFile) => {
     try {
       // 轉換為 base64
@@ -112,8 +136,14 @@ const useTaskStore = create((set, get) => ({
         uploaded_by: '施工人員'
       };
 
-      // TODO: 上傳到 Supabase Storage
-      // 暫時儲存在 task 的 photos array（需要資料庫 schema 調整）
+      // 更新本地 state
+      set((state) => ({
+        tasks: state.tasks.map((task) =>
+          task.id === taskId
+            ? { ...task, photos: [...(task.photos || []), photoData] }
+            : task
+        ),
+      }));
 
       return photoData;
     } catch (error) {
